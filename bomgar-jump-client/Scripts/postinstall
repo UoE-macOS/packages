@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# Our package has dropped the .dmg file somewhere for us to install
+# Look through the package manifest to find it.
+# $1 contains the path to the package this this script is running
+# from.
+
+dmg_path_raw="$(pkgutil --payload-files "${1}" | grep '.dmg' | grep -v '._')"
+
+dmg_path="$(echo $dmg_path_raw | sed 's/^[./] *//g')" # Remove leading .
+
+echo "looking for DMG at path: $dmg_path"
+
+if [ -f "${dmg_path}" ]
+then
+  mount_path=$(hdiutil attach -nobrowse -noverify "${dmg_path}" | awk '/Apple_HFS/ {print $3}')
+else
+  echo "Couldn't find DMG at: $dmg_path. Exiting"
+  exit 1
+fi
+
+# Run the installer application from inside the DMG
+${mount_path}/Double-Click\ To\ Start\ Support\ Session.app/Contents/MacOS/sdcust
+
+# Give things time to settle down
+sleep 15 
+
+# And unmount our image, if the installer hasn't already done so
+[ -d ${mount_path} ] && hdiutil detach "${mount_path}"
+
+exit 0
+
+# We might want to manipulate the application firewall settings here
+# but we can probably do that with a login script, which might be cleaner

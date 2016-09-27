@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Kill off any existing running bomgar installation and remove
+# any old LaunchDemons or LaunchAgents that are hanging around
+#
+# Because all the files include a random string or date in the name
+# we need to use the find command (or globbing) to locate them.
+#
+# This could probably be made safer
+
+# The bomgar installer will fail if nobody is logged in, so
+# bail out at the first opportunity if this is the case
+if [ "$(ls -l /dev/console | awk '{print $3}')" == 'root' ]
+then
+  echo "No console user: bailing out"
+  exit 1
+fi
+
+echo "Checking for existing installations of Bomgar..."
+
+# First kill off any Bomgar processes (they are all called 'sdcust')
+# and have 'bongar' somewhere in the path.
+for pid in $(ps ax | awk '/[b]omgar.*sdcust/ {print $1}')
+do 
+  kill -9 "${pid}"
+done
+
+# Then delete the LaunchDaemons
+for daemon in $(find /Library/LaunchDaemons -name 'com.bomgar.bomgar*' -type f -maxdepth 1)
+do
+  echo "Deleting Daemon at: $daemon"
+  rm "${daemon}"
+done
+
+# Now delete the daemons' hidden helper directories 
+for helper in $(find /Library/LaunchDaemons -name '.com.bomgar.bomgar*helper' -type d -maxdepth 1)
+do 
+  echo "Deleting demonic helpers at: ${helper}"
+  rm -r "${helper}"
+done
+
+# And the LaunchAgents
+for agent in $(find /Library/LaunchAgents -name 'com.bomgar.bomgar*' -type f -maxdepth 1)
+do 
+  echo "Deleting Agent at: ${agent}"
+  rm "${agent}"
+done
+
+# Finally remove any copies of the application from /Users/Shared
+for app in $(find /Users/Shared -type d -name 'bomgar-scc-*.app')
+do
+  echo "Deleting bomgar app at: $app"
+  rm -r "${app}"
+done
