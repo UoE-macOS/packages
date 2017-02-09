@@ -30,5 +30,6 @@ sleep 15
 
 exit 0
 
-# We might want to manipulate the application firewall settings here
-# but we can probably do that with a login script, which might be cleaner
+# We might want to manipulate the application firewall settings here, 
+# if we are installing on a managed client
+[ -x /usr/local/bin/jamf ] && /usr/local/bin/jamf policy -event bomgar-firewall
