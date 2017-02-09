@@ -28,8 +28,9 @@ sleep 15
 # And unmount our image, if the installer hasn't already done so
 [ -d ${mount_path} ] && hdiutil detach "${mount_path}"
 
-exit 0
-
-# We might want to manipulate the application firewall settings here, 
+# Manipulate the application firewall settings here,
 # if we are installing on a managed client
 [ -x /usr/local/bin/jamf ] && /usr/local/bin/jamf policy -event bomgar-firewall
+
+exit 0
+
