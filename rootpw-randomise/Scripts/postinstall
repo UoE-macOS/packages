@@ -30,6 +30,8 @@ result=$(/usr/bin/expect -f - << EOT
 if [ "$result" == "Success" ];
 then
   echo "Successfully randomised root password"
+  exit 0
 else
   echo "FAILED to randomise root password"
+  exit 1
 fi
