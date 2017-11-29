@@ -1,0 +1,35 @@
+#!/bin/sh
+
+######################################################################
+# Sets the root password to a random string of 64 printable characters
+#
+# We use expect so that we can pass the password without danger of it
+# being printed in (eg) the output of 'ps'.
+######################################################################
+
+pwd="$(cat /dev/random | LC_CTYPE=C tr -dc "[:print:]" | head -c 64)"
+
+result=$(/usr/bin/expect -f - << EOT
+  log_user 0
+  spawn -noecho dscl . -passwd /Users/root
+  expect "New Password:*"
+  send -- $(printf '%q' "${pwd}") 
+  send -- "\r"
+  expect {
+    "*DS Error:*" {
+      send_user "Fail"
+      exit
+     }
+    
+     eof {
+      send_user "Success"
+      exit
+     }
+  } )
+
+if [ "$result" == "Success" ];
+then
+  echo "Successfully randomised root password"
+else
+  echo "FAILED to randomise root password"
+fi
