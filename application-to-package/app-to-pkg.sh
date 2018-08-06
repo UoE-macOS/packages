@@ -13,7 +13,7 @@ SCRIPT="${BASH_SOURCE[0]}";
 # Path to the Resource folder
 RESOURCE_DIR=`dirname "${SCRIPT}"`
 DEFAULT_SCRIPTS=`echo "${RESOURCE_DIR}/Scripts"`
-
+echo $DEFAULT_SCRIPTS
 # Make a fresh package root
 rm -dfR "${PACKAGE_ROOT}"
 mkdir "${PACKAGE_ROOT}"
@@ -21,8 +21,8 @@ mkdir "${PACKAGE_ROOT}"
 OUTPUT="/Users/Shared/App_to_Packages"
 mkdir "${OUTPUT}"
 
-APPLICATION_TEST1=`echo $1 | grep ".app"`
-APPLICATION_TEST2=`echo $2 | grep ".app"`
+APPLICATION_TEST1=`echo "$1" | grep ".app"`
+APPLICATION_TEST2=`echo "$2" | grep ".app"`
 
 if [ -z "$APPLICATION_TEST1" ] && [ -z "$APPLICATION_TEST2" ]; then
 	echo "No Application found!"
@@ -56,7 +56,7 @@ echo "Determining application name an version."
 APPLICATION_NAME=`basename "$APPLICATION_PATH" | tr ' ' '-' | awk -F ".app" '{print $1}'`
 
 BUNDLE_VERSION1=`defaults read "${APPLICATION_PATH}/Contents/Info" CFBundleShortVersionString`
-BUNDLE_VERSION2=`defaults read "${APPLICATION_PATH}/Contents/Info" CFBundleVersionString`
+BUNDLE_VERSION2=`defaults read "${APPLICATION_PATH}/Contents/Info" CFBundleVersion`
 
 if [ -z "$BUNDLE_VERSION1" ] && [ -z "$BUNDLE_VERSION2" ]; then
 	echo "Application version has not been found, setting to 1.0"
@@ -73,19 +73,39 @@ fi
 echo "Application name: $APPLICATION_NAME"
 echo "Application version: $APPLICATION_VERSION"
 
+COMPONENT_PLIST="/tmp/${APPLICATION_NAME}.plist"
+cat <<EOF > "${COMPONENT_PLIST}"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>BundleHasStrictIdentifier</key>
+		<true/>
+		<key>BundleIsRelocatable</key>
+		<false/>
+		<key>BundleIsVersionChecked</key>
+		<true/>
+		<key>BundleOverwriteAction</key>
+		<string>upgrade</string>
+		<key>RootRelativeBundlePath</key>
+		<string>${APPLICATION_NAME}.app</string>
+	</dict>
+</array>
+</plist>
+EOF
+
 if [ -e "${OUTPUT}/${APPLICATION_NAME}-${APPLICATION_VERSION}-1.pkg" ]; then
 	mv -f "${OUTPUT}/${APPLICATION_NAME}-${APPLICATION_VERSION}-1.pkg" "${OUTPUT}/${APPLICATION_NAME}-${APPLICATION_VERSION}-1.old.pkg"
 	echo "Previous package found and renamed: ${OUTPUT}/${APPLICATION_NAME}-${APPLICATION_VERSION}-1.old.pkg"
 fi
 
-/usr/bin/pkgbuild --identifier "ed.is.${APPLICATION_NAME}" --version "${APPLICATION_VERSION}" --install-location /Applications --scripts "${SCRIPT_PATH}" --root "${PACKAGE_ROOT}" "${OUTPUT}"/"${APPLICATION_NAME}-${APPLICATION_VERSION}-1.pkg" 2>&1
+/usr/bin/pkgbuild --identifier "ed.is.${APPLICATION_NAME}" --version "${APPLICATION_VERSION}" --install-location /Applications --scripts "${SCRIPT_PATH}" --root "${PACKAGE_ROOT}" --component-plist "${COMPONENT_PLIST}" "${OUTPUT}"/"${APPLICATION_NAME}-${APPLICATION_VERSION}-1.pkg" 2>&1
 
 rm -dfR "${PACKAGE_ROOT}"
 
-echo "Opening the output location; ${OUTPUT}"
+echo "Script process completed. Drag the application (Application.app) and the directory containing scripts (preinstall and postinstall) that you want to package or Quit.
 
 open "${OUTPUT}"
-
-echo "Process completed. Drag the application (Application.app) and the directory containing scripts (preinstall and postinstall) that you want to package or Quit.
 
 exit 0;
