@@ -1,0 +1,39 @@
+#!/bin/sh
+
+fiery_pde='/Library/Printers/Xerox/PDEs/EF512738/EF512738 (FF).plugin/Contents/MacOS/EF512738 (FF)'
+offset='0x2c309'
+patch_file='./patch.bin'
+target_original_byte='85'
+
+if [ ! -f "${fiery_pde}" ]
+then
+    echo "fiery_patch: can't find file to patch: ${fiery_pde}."
+    exit 1
+fi
+
+original_byte=$(dd if="${fiery_pde}" skip=${offset} bs=1 count=1 2>/dev/null |xxd -p)
+
+if [[ "${original_byte}" != "${target_original_byte}" ]]
+then
+    echo "fiery_patch: couldn't find target byte ${target_original_byte} at offset ${offset}. Found ${original_byte} instead. Aborting"
+    exit 1
+fi
+
+echo "fiery_patch: found target byte ${target_original_byte} at offset ${offset}. Continuing."
+
+# Make a backup!
+cp "${fiery_pde}" "${fiery_pde}.$(date)"
+
+# Do the patchimg
+dd of="${fiery_pde}" if="${patch_file}" seek="${offset}" bs=1 count=1 conv=notrunc
+   
+# Did it work?
+new_byte=$(dd if="${fiery_pde}" skip=${offset} bs=1 count=1 2>/dev/null |xxd -p)
+
+if [[ "${new_byte}" == "$(xxd -p ${patch_file})" ]]
+then
+    echo "fiery_patch: Success."
+else
+    echo "fiery_patch: Something went wrong - patched byte is not what we expected"
+    exit 1
+fi
