@@ -1,0 +1,78 @@
+#!/bin/bash
+
+set -euxo pipefail
+
+##############################################
+# Set things up for a clean build. 
+##############################################
+
+DOWNLOADER="installinstallmacos.py"
+DOWNLOADER_URL="https://raw.githubusercontent.com/UoE-macOS/tools/master/${DOWNLOADER}"
+QUICKADD_PKG="/Library/MacSD/QuickAddLab-0.1-1.pkg" # Should have been installed before this script runs
+BUILD_ID=
+
+tmpdir=$(mktemp -d /tmp/cleanbuild.XXXX)
+this_script=${0}
+
+function cleanup {
+	if mount | grep Install_macOS_10.13.6-${BUILD_ID}
+    then
+		diskutil unmountdisk /Volumes/Install_macOS_10.13.6-${BUILD_ID}
+    fi
+    rm -rf ${tmpdir}
+    pgrep jamfHelper && killall jamfHelper
+    echo "Cleaned up"
+}
+
+function log_msg {
+    echo "${this_script}: $@"
+    logger "${this_script}: $@"
+}
+
+# Cleanup if anything goes wrong. If things go right we are 
+# going to reboot and wipe the disk, so no need to cleanup :-) 
+trap cleanup ERR
+
+if [ ! -f ${QUICKADD_PKG} ]
+then
+    log_msg "Quickadd package not available at ${QUICKADD_PKG}"
+    exit 1
+fi
+
+# First, download the script that we will use to download 10.13 from Apple's servers
+if curl -L "${DOWNLOADER_URL}" > "${DOWNLOADER}"
+then
+    log_msg "Downloaded installinstallmacos.py"
+else
+    log_msg "Failed to download installinstallmacos.py from ${DOWNLOADER_URL}"
+    exit 1
+fi
+
+# Now, download the desired build of 10.13
+python ./installinstallmacos.py --build ${BUILD_ID} 17G65
+
+# Mount the installer image
+hdiutil attach "Install_macOS_10.13.6-${BUILD_ID}.sparseimage" 
+
+# If that succeeded we should now have an installer - let's take a look
+if [ ! -x "/Volumes/Install_macOS_10.13.6-17G65/Applications/Install macOS High Sierra.app/Contents/Resources/startosinstall" ]
+then
+    log_msg "Something went wrong - failed to find the installer!"
+    exit 1
+else
+    # Let the JSS know this is an ECA machine
+    echo ECA > /Library/MacSD/.ForceOrgUnitAffiliation 
+
+    # Request a clean build
+    touch /Library/MacSD/.UoECleanBuildRequested 
+
+    log_msg "Starting upgrade and install"
+    /Volumes/Install_macOS_10.13.6-17G65/Applications/Install\ macOS\ High\ Sierra.app/Contents/Resources/startosinstall \
+         --volume /Volumes/Macintosh\ HD \
+         --converttoapfs YES \
+         --agreetolicense \
+         --nointeraction \
+         --installpackage ${QUICKADD_PKG}
+
+    exit 0
+fi
