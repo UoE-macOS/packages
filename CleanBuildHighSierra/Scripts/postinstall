@@ -9,7 +9,7 @@ set -euxo pipefail
 DOWNLOADER="installinstallmacos.py"
 DOWNLOADER_URL="https://raw.githubusercontent.com/UoE-macOS/tools/master/${DOWNLOADER}"
 QUICKADD_PKG="/Library/MacSD/QuickAddLab-0.1-1.pkg" # Should have been installed before this script runs
-BUILD_ID=
+BUILD_ID=17G65
 
 tmpdir=$(mktemp -d /tmp/cleanbuild.XXXX)
 this_script=${0}
@@ -49,7 +49,7 @@ else
 fi
 
 # Now, download the desired build of 10.13
-python ./installinstallmacos.py --build ${BUILD_ID} 17G65
+python ./installinstallmacos.py --build ${BUILD_ID} 
 
 # Mount the installer image
 hdiutil attach "Install_macOS_10.13.6-${BUILD_ID}.sparseimage" 
