@@ -204,11 +204,11 @@ def is_installed(package):
         return False
     else:
         with open(receipts, 'r') as r:
-            result = package in r.read().split['\n']
+            result = os.path.basename(package) in r.read().split('\n')
         if result:
-            echo "%s is installed already" % package
+            print "%s is installed already" % package
         else:
-            echo "%s is int installed" % package
+            print "%s is not installed" % package
         return result
 
 
@@ -218,10 +218,8 @@ def install(package):
     cmd = ['/usr/sbin/installer', '-pkg', 
            package, '-target', '/']
     subprocess.check_call(cmd)
-    with open(receipts, 'w') as r:
-        db = r.read()
-        db += '%s\n' % package
-        r.write(db)
+    with open(receipts, 'a+') as r:
+        r.write('%s\n' % os.path.basename(package))
 
 def main(argv=None):
     # ================
@@ -244,11 +242,11 @@ def main(argv=None):
     
     # Install
     parser_activate = subparsers.add_parser('install', help='Download and install packages')
-    parser_activate.add_argument('-t', '--tmpdir', nargs=1, required=True, help='Temporary download location. For example ~/Downloads/LogicProContent')
+    parser_activate.add_argument('-o', '--output', nargs=1, required=True, help='Temporary download location. For example ~/Downloads/LogicProContent')
     
     # Parse arguments
     args = vars(parser.parse_args())
-    
+    print args 
     # =================================================================
     # Download the property list which contains the package references
     # =================================================================
@@ -309,7 +307,10 @@ def main(argv=None):
         download_size_string = human_readable_size(download_size_int)
         
 
-        if os.path.exists(save_path) and not is_installed(save_path):
+	if is_installed(save_path) and args['subparser_name'] == 'install':
+	    continue
+	
+        if os.path.exists(save_path):
             # Check the local file size and download if it's smaller.
             # TODO: Get a better way for this. The 'DownloadSize' key in logicpro_plist
             # seems to be wrong for a number of packages.
@@ -318,16 +319,17 @@ def main(argv=None):
                 download_package_as(download_url, save_path)
             else:
                 print "Skipping already downloaded package %s" % download_url
-        elif ((args['subparser_name'] == 'install' and not is_installed(save_path))
-                or args['subparser_name'] ==  'download'):
+        else: 
             print "Downloading %s" % (download_url)
             download_package_as(download_url, save_path)
-            if args['subparser_name'] == install:
-                try:
-                    install(save_path)
-                    os.unlink(save_path)
-                except subprocess.CalledProcessError as exc:
-                    print "Failed to install %s: %s" % (save_path, exc)
+        
+	if args['subparser_name'] == 'install':
+	    print "Installing %s" % save_path 
+            try:
+                install(save_path)
+                os.unlink(save_path)
+            except subprocess.CalledProcessError as exc:
+                print "INSTALL FAILED to install %s: %s" % (save_path, exc)
 
         elif args['subparser_name'] == download:
             for item in value["savepaths"]:
