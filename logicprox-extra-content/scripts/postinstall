@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ -d "/Applications/Logic Pro X.app" ]
+then
+    tmpdir='/tmp/LogicProXExtraContent'
+    python download-logicprox-content.py install -o ${tmpdir}
+    if [ $? -eq 0 ]
+    then
+        echo "Installed logic pro x content"
+        rm -r ${tmpdir}
+        exit 0
+    else
+        echo "Install failed"
+        exit 1
+    fi
+else
+    echo "Logic pro not installed: aborting"
+    exit 255
+fi	
