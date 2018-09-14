@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -exuo pipefail
+
+dmg='ProToolsExtraAIRInstruments-2018.3-1.dmg'
+vol="$(hdiutil attach $dmg  | tail -1 | awk -F '\t' '{print $3}')"
+
+pkg="${vol}/Install First AIR Instruments Bundle.pkg"
+
+installer -pkg "${pkg}" -target / -dumplog
+
+sleep 5
+
+diskutil unmount "${vol}"
+
+exit 0   
