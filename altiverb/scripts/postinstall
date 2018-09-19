@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -x -eu
+
+INSTALL_SCRIPT_TEMPLATE='./install_script.tmpl'
+INSTALL_SCRIPT='./install_script.sh'
+
+whereiam="$(pwd)"
+
+sed "s|WHERE_I_AM|${whereiam}|g" "${INSTALL_SCRIPT_TEMPLATE}" > "${INSTALL_SCRIPT}"
+
+sh "${INSTALL_SCRIPT}"
