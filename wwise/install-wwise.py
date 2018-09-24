@@ -10,7 +10,11 @@ import sys
 import os
 from base64 import b64decode
 
-DESCRIPTION = 'Download and install some bundle of WWise'
+DESCRIPTION = ('Emulate the Wwise Launcher application to download and install '
+               'the desired version of the Wwise app. Also patches the installed '
+               'copy to remove the need for user interaction during the installation '
+               'of the Visual C++ redistributable package which happens on 1st run.')
+               
 VERSION = '0.0.1'
 
 
