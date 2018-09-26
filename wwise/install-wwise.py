@@ -14,8 +14,8 @@ DESCRIPTION = ('Emulate the Wwise Launcher application to download and install '
                'the desired version of the Wwise app. Also patches the installed '
                'copy to remove the need for user interaction during the installation '
                'of the Visual C++ redistributable package which happens on 1st run.')
-               
-VERSION = '0.0.1'
+
+VERSION = '0.0.2'
 
 
 def process_args(argv=None):
@@ -55,6 +55,7 @@ def process_args(argv=None):
 
 def main(args):
     BUNDLE_YEAR = args.BUNDLE.split('.')[0]
+ 
 
     URLBASE = 'https://www.audiokinetic.com/wwise/launcher/?action='
 
@@ -77,14 +78,17 @@ def main(args):
 
     CONTEXT_DATA = {"context": {
         "version": 1
-    }
+        }
     }
 
     ARCHIVES_APP = ['Wwise.app.zip']
     ARCHIVES_AUTHORING = ['Authoring.tar.xz',
+                          'FilePackager.x64.tar.xz',
                           'Authoring.x64.tar.xz', ]
 
-    INSTALL_DIR = args.INSTALL_DIR + '/' + args.BUNDLE
+    INSTALL_DIR = '{}/Audiokinetic/Wwise {}'.format(args.INSTALL_DIR,    
+                                                    args.BUNDLE.replace('_', '.'))
+
     DOWNLOAD_DIR = args.DOWNLOAD_DIR + '/' + args.BUNDLE
 
     # Build our authentication blob
@@ -113,53 +117,86 @@ def main(args):
 
     # Download a JSON list of all the available files for this bundle
     resp = fetch(URLBASE + 'getFiles&bundle_id=' + args.BUNDLE, data=body)
-    all_files = decode_payload(resp.read())
+    bundle_data = decode_payload(resp.read())
+
+    # Start to build the 'install-table.json' file which we will leave behind
+    install_table = {'wwise.{}'.format(
+        args.BUNDLE.replace('.', '_')): {
+            'bundle': {},
+            'children': [],
+            'entryState':0,
+            'installed': {
+                'date': {},
+                'files': [],
+                'groups': [],
+                },
+            'sampleFiles': [],
+            'targetDir': INSTALL_DIR,
+            }
+        }
+
+    receipt = install_table['wwise.' + args.BUNDLE.replace('.', '_')]
+    receipt['bundle'].update({'version': bundle_data['version']})
+    receipt['bundle'].update({'id': bundle_data['id']})
+    receipt['bundle'].update({'name': bundle_data['name']})
+    receipt['bundle'].update({'displayName': bundle_data['name'] + ' ' + args.BUNDLE})
+
 
     if args.STYLE == 'mini':
         # Only install the app and required Authoring packages
-        to_download = [f for f in all_files['files']
+        to_download = [f for f in bundle_data['files']
                        if f['name'] in (ARCHIVES_APP + ARCHIVES_AUTHORING)]
     else:
-        to_download = all_files['files']
+        to_download = bundle_data['files']
 
     if not os.path.isdir(DOWNLOAD_DIR):
         os.makedirs(DOWNLOAD_DIR)
 
-    for f in to_download:
-        outfile = DOWNLOAD_DIR + "/" + f['name']
-        if not (f.get('url', False)):
+    for candidate in to_download:
+        outfile = DOWNLOAD_DIR + "/" + candidate['name']
+        if not (candidate.get('url', False)):
             print("{}: no URL.".format(outfile))
             continue
 
         if os.path.isfile(outfile):
             disk_size = os.path.getsize(outfile)
-            download_size = f.get('size', 0)
+            download_size = candidate.get('size', 0)
             print("{}: disk: {}, server: {}".format(
                 outfile, disk_size, download_size))
             if disk_size >= download_size:
                 continue
 
-        print("{}: Downloading.".format(f['url']))
+        print("{}: Downloading.".format(candidate['url']))
         # Some content is served from a CDN which only permits GET requests.
         # urllib will only issue a GET request if the 'data' argument is missing.
-        if f['url'].find('rackcdn') >= 0:
-            fetch(f['url'], dest=DOWNLOAD_DIR + "/" + f['name'])
+        if candidate.get('method', None) == 'GET':
+            fetch(candidate['url'], dest=DOWNLOAD_DIR + "/" + candidate['name'])
         else:
-            fetch(f['url'], data=body, dest=DOWNLOAD_DIR + "/" + f['name'])
+            fetch(candidate['url'], data=body, dest=DOWNLOAD_DIR + "/" + candidate['name'])
 
-    # Install the application itself
-    print("Unarchiving main application to {}".format(INSTALL_DIR))
-    for arc in ARCHIVES_APP:
-        unarchive(DOWNLOAD_DIR + '/' + arc, INSTALL_DIR)
-
-    # Directory into which we need to install supporting files 
+     # Directory into which we need to install supporting files 
     support_files = INSTALL_DIR + ('/Wwise.app/Contents/SharedSupport/Wwise/support'
                                    '/wwise/drive_c/Program Files/Audiokinetic/Wwise')
 
+    # Install the application itself
+    print("Unarchiving main application to {}".format(INSTALL_DIR))
+    for arc in [f for f in bundle_data['files'] if f['name'] in ARCHIVES_APP]:
+        unarchive(arc, DOWNLOAD_DIR, INSTALL_DIR)
+        update_receipt(arc, receipt)
+
     # Decompress the Authoring files.. these are required
     print("Installing authoring support to {}".format(support_files))
-    for arc in ARCHIVES_AUTHORING:
-        unarchive(DOWNLOAD_DIR + '/' + arc, support_files)
+    for arc in [f for f in bundle_data['files'] if f['name'] in ARCHIVES_AUTHORING]:
+        unarchive(arc, DOWNLOAD_DIR, support_files)
+        update_receipt(arc, receipt)
+
+    # Write the install data
+    data_dir = '/Applications/Audiokinetic/Data'
+    print("Writing install data to {}".format(data_dir))
+    if not os.path.isdir(data_dir):
+        os.mkdir(data_dir)
+    with open(data_dir + '/' + 'install-table.json', 'w') as out:
+        out.write(json.dumps(install_table))
 
     # The wwise_launcher script handles te mechanics of launching the windows
     # executable under Wine. If it detects that the MS Visual C++ redistributable package
@@ -181,13 +218,24 @@ def main(args):
     print("Done")
 
 
+def update_receipt(source, receipt):
+    receipt['installed']['files'].append(source['name'])
+    for grp in source['groups']:
+        newgrp = {'id': grp['groupId'], 'valueId': grp['groupValueId']}
+        # Is the group already in the list?
+        matches = [ item for item in receipt['installed']['groups'] if cmp(item, newgrp) == 0 ]
+        if not matches or len(matches) == 0:
+            receipt['installed']['groups'].append(newgrp)
+
+
 def decode_payload(payload):
     parsed = json.loads(payload)
     decoded = b64decode(parsed.get('payload', None))
     return json.loads(decoded)
 
 
-def unarchive(path, dest):
+def unarchive(source, download_dir, dest):
+    path = download_dir + '/' + source['name']
     if not os.path.isdir(dest):
         os.makedirs(dest)
     cmd = None
@@ -196,6 +244,7 @@ def unarchive(path, dest):
     elif path.endswith('.zip'):
         cmd = ['/usr/bin/unzip', '-q', '-d', dest, path]
     return subprocess.check_call(cmd)
+   
 
 
 def fetch(url, dest=None, data=None):
