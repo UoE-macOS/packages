@@ -55,7 +55,6 @@ def process_args(argv=None):
 
 def main(args):
     BUNDLE_YEAR = args.BUNDLE.split('.')[0]
- 
 
     URLBASE = 'https://www.audiokinetic.com/wwise/launcher/?action='
 
@@ -78,7 +77,7 @@ def main(args):
 
     CONTEXT_DATA = {"context": {
         "version": 1
-        }
+    }
     }
 
     ARCHIVES_APP = ['Wwise.app.zip']
@@ -86,8 +85,8 @@ def main(args):
                           'FilePackager.x64.tar.xz',
                           'Authoring.x64.tar.xz', ]
 
-    INSTALL_DIR = '{}/Audiokinetic/Wwise {}'.format(args.INSTALL_DIR,    
-                                                    args.BUNDLE.replace('_', '.'))
+    INSTALL_DIR = '{}/Wwise {}'.format(args.INSTALL_DIR,
+                                       args.BUNDLE.replace('_', '.'))
 
     DOWNLOAD_DIR = args.DOWNLOAD_DIR + '/' + args.BUNDLE
 
@@ -124,23 +123,23 @@ def main(args):
         args.BUNDLE.replace('.', '_')): {
             'bundle': {},
             'children': [],
-            'entryState':0,
+            'entryState': 0,
             'installed': {
                 'date': {},
                 'files': [],
                 'groups': [],
-                },
+            },
             'sampleFiles': [],
             'targetDir': INSTALL_DIR,
-            }
-        }
+    }
+    }
 
     receipt = install_table['wwise.' + args.BUNDLE.replace('.', '_')]
     receipt['bundle'].update({'version': bundle_data['version']})
     receipt['bundle'].update({'id': bundle_data['id']})
     receipt['bundle'].update({'name': bundle_data['name']})
-    receipt['bundle'].update({'displayName': bundle_data['name'] + ' ' + args.BUNDLE})
-
+    receipt['bundle'].update(
+        {'displayName': bundle_data['name'] + ' ' + args.BUNDLE})
 
     if args.STYLE == 'mini':
         # Only install the app and required Authoring packages
@@ -170,11 +169,13 @@ def main(args):
         # Some content is served from a CDN which only permits GET requests.
         # urllib will only issue a GET request if the 'data' argument is missing.
         if candidate.get('method', None) == 'GET':
-            fetch(candidate['url'], dest=DOWNLOAD_DIR + "/" + candidate['name'])
+            fetch(candidate['url'], dest=DOWNLOAD_DIR +
+                  "/" + candidate['name'])
         else:
-            fetch(candidate['url'], data=body, dest=DOWNLOAD_DIR + "/" + candidate['name'])
+            fetch(candidate['url'], data=body,
+                  dest=DOWNLOAD_DIR + "/" + candidate['name'])
 
-     # Directory into which we need to install supporting files 
+     # Directory into which we need to install supporting files
     support_files = INSTALL_DIR + ('/Wwise.app/Contents/SharedSupport/Wwise/support'
                                    '/wwise/drive_c/Program Files/Audiokinetic/Wwise')
 
@@ -198,6 +199,10 @@ def main(args):
     with open(data_dir + '/' + 'install-table.json', 'w') as out:
         out.write(json.dumps(install_table))
 
+    # And the bundle data
+    with open(INSTALL_DIR + '/' + 'bundle-data.json', 'w') as out:
+        out.write(json.dumps(bundle_data))
+
     # The wwise_launcher script handles te mechanics of launching the windows
     # executable under Wine. If it detects that the MS Visual C++ redistributable package
     # isn't installed, it will download it and run the installer. which is fine, but needs user
@@ -219,12 +224,16 @@ def main(args):
 
 
 def update_receipt(source, receipt):
+    """ Add any groups associated with `source` to `receipt` 
+        only if they are not already present in `receipt`
+    """
     receipt['installed']['files'].append(source['name'])
     for grp in source['groups']:
         newgrp = {'id': grp['groupId'], 'valueId': grp['groupValueId']}
         # Is the group already in the list?
-        matches = [ item for item in receipt['installed']['groups'] if cmp(item, newgrp) == 0 ]
-        if not matches or len(matches) == 0:
+        matches = [item for item in receipt['installed']['groups']
+                   if cmp(item, newgrp) == 0]
+        if not matches or matches == []:
             receipt['installed']['groups'].append(newgrp)
 
 
@@ -244,7 +253,6 @@ def unarchive(source, download_dir, dest):
     elif path.endswith('.zip'):
         cmd = ['/usr/bin/unzip', '-q', '-d', dest, path]
     return subprocess.check_call(cmd)
-   
 
 
 def fetch(url, dest=None, data=None):
