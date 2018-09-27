@@ -17,7 +17,7 @@
 # Released by JSS User: @@USER
 #
 ##################################################################
-set -euo pipefail -x
+set -euo pipefail
 
 USER="${1}"
 SERIAL="${4}"
