@@ -27,7 +27,7 @@ def main():
 
 
 def fetch(url, output):
-    """ Fetch `package` and store it in `dest`
+    """ Fetch `url` and store it in `output`
     """
     try:
         resp = urllib2.urlopen(url)
