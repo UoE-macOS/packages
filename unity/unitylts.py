@@ -1,4 +1,24 @@
 #!/usr/bin/python
+""" Scrape the page at https://unity3d.com/unity/qa/lts-releases to 
+    determine the available Unity LTS releases and the files associated
+    with them.
+
+    This uses htmllib rather than bs4 to avoid non-stdlib dependencies.
+    Because it's scraping a web page it is fragile. If the format of the 
+    page or the download page changes significantly it will break. YMMV.
+
+    This is intended to be imported as a module like so:
+    
+    import unitylts
+
+    latest = unitylts.get_unity_lts_release(release='latest')
+    for package in latest['files']:
+        download_or_something(package)
+
+    You can also call it direct from the commandline to see the 
+    same information as is returned by the above function.
+"""
+
 from __future__ import print_function
 from HTMLParser import HTMLParser
 import urllib2
@@ -82,4 +102,8 @@ def get_unity_lts_release(release='latest'):
         return None
 
 if __name__ == "__main__":
-    pprint(get_unity_lts_release(sys.argv[1] if 1 < len(sys.argv) else 'latest') or 'Release not found')
+    release = get_unity_lts_release(sys.argv[1] if 1 < len(sys.argv) else 'latest')
+    print("Version: ", release['version'])
+    print("Revision: ", release['revision'])
+    for a_file in release['files']:
+        print("Package:", a_file)

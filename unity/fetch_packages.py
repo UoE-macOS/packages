@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+""" Download all the packages associated with the letest LTS
+    release of Unity. Uses 'unitylts.py' to work out which packages
+    are required
+"""
 from __future__ import print_function
 import urllib2
 import shutil
