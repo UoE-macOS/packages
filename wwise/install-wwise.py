@@ -15,7 +15,7 @@ DESCRIPTION = ('Emulate the Wwise Launcher application to download and install '
                'copy to remove the need for user interaction during the installation '
                'of the Visual C++ redistributable package which happens on 1st run.')
 
-VERSION = '0.0.2'
+VERSION = '0.0.4'
 
 
 def process_args(argv=None):
@@ -27,12 +27,13 @@ def process_args(argv=None):
                         dest='BUNDLE', default='2018.1.1_6727', 
                         help=('ID of the bundle that you want to build '
                               'defaults to 2018.1.1_6727'))
-    parser.add_argument('--email', default=False,
-                        dest='EMAIL', help=('Wwise account email address.'))
+    parser.add_argument('--email', default='',
+                        dest='EMAIL', help=('Wwise account email address. '
+                                            'Leave this unset for anonymous download.'))
 
-    parser.add_argument('--password', default=False,
+    parser.add_argument('--password', default='',
                         dest='PASSWORD', 
-                        help=('Wwise account password (you wll be prompted if missing)'))
+                        help=('Wwise account password (you will be prompted if missing)'))
 
     parser.add_argument('--install', default='mini',
                         dest='STYLE', help=('Install Style. mini or maxi'))
@@ -41,14 +42,14 @@ def process_args(argv=None):
                         dest='DOWNLOAD_DIR', help=('Directory to download installation files to'))
 
     parser.add_argument('--install-prefix', default='/',
-                        dest='INSTALL_PREFIX', 
+                        dest='INSTALL_PREFIX',
                         help=('Directory to install to. Wwise will be installed '
                               'to Applications/Audiokinetic/Wwise RELEASE/ under '
                               'this prefix. Defaults to "/" but you can use something '
                               'else to install into a temporary root for packaging.'))
 
     parser.add_argument('--real-install-prefix', default='/',
-                        dest='REAL_PREFIX', 
+                        dest='REAL_PREFIX',
                         help=('If you plan to relocate the install (eg because you '
                               'are installing into a temporary package root), use this '
                               'argument to specify the final prefix on the front of '
@@ -58,10 +59,8 @@ def process_args(argv=None):
 
     args = parser.parse_args(argv)
 
-    if not args.EMAIL:
-        print("You must specify at least an email address")
-        return False
-    if not args.PASSWORD:
+    # If an email has been set but not a password, prompt for the latter.
+    if args.EMAIL != "" and args.PASSWORD == "":
         args.PASSWORD = getpass.getpass(
             prompt='Password for {}: '.format(args.EMAIL), stream=None)
 
