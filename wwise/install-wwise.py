@@ -101,7 +101,8 @@ def main(args):
 
     INSTALL_PATH = 'Applications/Audiokinetic/Wwise ' + \
         args.BUNDLE.replace('_', '.')
-    INSTALL_DIR = args.INSTALL_PREFIX + INSTALL_PATH
+        
+    INSTALL_DIR = args.INSTALL_PREFIX + '/' + INSTALL_PATH
 
     DOWNLOAD_DIR = args.DOWNLOAD_DIR + '/' + args.BUNDLE
 
