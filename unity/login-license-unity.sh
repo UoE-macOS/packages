@@ -9,10 +9,10 @@
 # such it expects arg3 to be the username of the logging-in user and 
 # the licensing data to be passed in args 4, 5 and 6.
 #
-# Date: "Thu Sep 27 12:58:59 2018 +0100"
-# Version: 0.0.2
-# Origin: https://github.com/UoE-macOS/packages
-# Released by JSS User: glee1
+# Date: @@DATE
+# Version: @@VERSION
+# Origin: @@ORIGIN
+# Released by JSS User: @@USER
 #
 ##################################################################
 set -euo pipefail 
