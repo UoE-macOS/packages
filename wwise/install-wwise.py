@@ -24,13 +24,15 @@ def process_args(argv=None):
                                      version=VERSION)
 
     parser.add_argument('--bundle',
-                        dest='BUNDLE', default='2018.1.1_6727', help=(('ID of the bundle that you want to build '
-                                                                       'defaults to 2018.1.1_6727')))
+                        dest='BUNDLE', default='2018.1.1_6727', 
+                        help=('ID of the bundle that you want to build '
+                              'defaults to 2018.1.1_6727'))
     parser.add_argument('--email', default=False,
                         dest='EMAIL', help=('Wwise account email address.'))
 
     parser.add_argument('--password', default=False,
-                        dest='PASSWORD', help=('Wwise account password (you wll be prompted if missing)'))
+                        dest='PASSWORD', 
+                        help=('Wwise account password (you wll be prompted if missing)'))
 
     parser.add_argument('--install', default='mini',
                         dest='STYLE', help=('Install Style. mini or maxi'))
@@ -38,8 +40,21 @@ def process_args(argv=None):
     parser.add_argument('--download-dir', default='/Library/Application Support/Wwise/Downloads',
                         dest='DOWNLOAD_DIR', help=('Directory to download installation files to'))
 
-    parser.add_argument('--install-dir', default='/Applications',
-                        dest='INSTALL_DIR', help=('Directory to install to'))
+    parser.add_argument('--install-prefix', default='/',
+                        dest='INSTALL_PREFIX', 
+                        help=('Directory to install to. Wwise will be installed '
+                              'to Applications/Audiokinetic/Wwise RELEASE/ under '
+                              'this prefix. Defaults to "/" but you can use something '
+                              'else to install into a temporary root for packaging.'))
+
+    parser.add_argument('--real-install-prefix', default='/',
+                        dest='REAL_PREFIX', 
+                        help=('If you plan to relocate the install (eg because you '
+                              'are installing into a temporary package root), use this '
+                              'argument to specify the final prefix on the front of '
+                              '/Applications. Defaults to "/" and should be left unchanged '
+                              'if you are building a package which will ultimately install '
+                              'to /Applications.'))
 
     args = parser.parse_args(argv)
 
@@ -85,8 +100,9 @@ def main(args):
                           'FilePackager.x64.tar.xz',
                           'Authoring.x64.tar.xz', ]
 
-    INSTALL_DIR = '{}/Wwise {}'.format(args.INSTALL_DIR,
-                                       args.BUNDLE.replace('_', '.'))
+    INSTALL_PATH = 'Applications/Audiokinetic/Wwise ' + \
+        args.BUNDLE.replace('_', '.')
+    INSTALL_DIR = args.INSTALL_PREFIX + INSTALL_PATH
 
     DOWNLOAD_DIR = args.DOWNLOAD_DIR + '/' + args.BUNDLE
 
@@ -130,7 +146,7 @@ def main(args):
                 'groups': [],
             },
             'sampleFiles': [],
-            'targetDir': INSTALL_DIR,
+            'targetDir': args.REAL_PREFIX + INSTALL_PATH
     }
     }
 
@@ -192,10 +208,11 @@ def main(args):
         update_receipt(arc, receipt)
 
     # Write the install data
-    data_dir = '/Applications/Audiokinetic/Data'
+    data_dir = args.INSTALL_PREFIX + '/Applications/Audiokinetic/Data'
+
     print("Writing install data to {}".format(data_dir))
     if not os.path.isdir(data_dir):
-        os.mkdir(data_dir)
+        os.makedirs(data_dir)
     with open(data_dir + '/' + 'install-table.json', 'w') as out:
         out.write(json.dumps(install_table))
 
