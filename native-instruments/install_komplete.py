@@ -126,7 +126,9 @@ def main(args):
 
     dist_types = ['updates']
     if not args.UPDATES_ONLY:
-        dist_types.insert(0, 'full-products')
+        dist_types.insert(0, 'full-products') 
+
+    check_create_download_dirs(args.DOWNLOAD_DIR, dist_types)
 
     # Install the latest version of Native Access
     install_native_access(args.DOWNLOAD_DIR)
@@ -137,8 +139,6 @@ def main(args):
 
     # Stash our auth token.
     AUTH_HEADER['Authorization'] = 'Bearer ' + token
-
-    check_create_download_dirs(args.DOWNLOAD_DIR, dist_types)
 
     for prod in KOMPLETE_11_PRODUCTS:
         for dist_type in dist_types:
