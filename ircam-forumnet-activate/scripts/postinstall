@@ -1,0 +1,33 @@
+#!/bin/sh
+
+set -uo pipefail
+
+KEY_FILE='./Ircam_Activation_Key.txt'
+# Audiosculpt installations have the version in the name, and it may change.
+# There should only be one version present though - so use a glob to find it.
+TOOL_PATH=$(echo /Applications/AudioSculpt/AudioSculpt*/Contents/MacOS/pm2)
+LICENSE_DIR="/Library/Application Support/Ircam"
+LICENSE_FILE='._ifpk_2'
+
+if [ ! -x "${TOOL_PATH}" ]
+then
+    echo "${TOOL_PATH} isn't an executable file - exiting"
+    exit 1
+fi
+
+# Create dircetory if necessary
+[ ! -d "${LICENSE_DIR}" ] && mkdir "${LICENSE_DIR}"
+
+# Back up license file
+[ -f "${LICENSE_DIR}/${LICENSE_FILE}" ] &&\
+     mv "${LICENSE_DIR}/${LICENSE_FILE}" "${LICENSE_DIR}/${LICENSE_FILE}".bak
+
+# Run the licensing command. This seems to exit 255 even if it succeeds.
+"${TOOL_PATH}" -init_key_file "${KEY_FILE}"
+
+if [ -e "${LICENSE_DIR}/${LICENSE_FILE}" ]
+then
+    echo "License file exists - that seemed to work!"
+else
+    echo "Can't see license file - something probably went wrong"
+fi
