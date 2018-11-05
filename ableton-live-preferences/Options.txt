@@ -1,0 +1,5 @@
+-LicenseServer
+-DontAskForAdminRights
+-EventRecorder=Off
+-_DisableAutoUpdates
+-_DisableUsageData
