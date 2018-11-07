@@ -2,7 +2,7 @@
 
 set -exuo pipefail
 
-dmg='ProToolsExtraAIRInstruments-2018.3-1.dmg'
+dmg='ProToolsExtraFirstAIRInstrumentsBundle.dmg'
 vol="$(hdiutil attach $dmg  | tail -1 | awk -F '\t' '{print $3}')"
 
 pkg="${vol}/Install First AIR Instruments Bundle.pkg"
