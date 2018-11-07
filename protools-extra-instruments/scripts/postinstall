@@ -13,4 +13,11 @@ sleep 5
 
 diskutil unmount "${vol}"
 
+# Set content paths for AIR Instruments
+/usr/bin/defaults write /Library/Preferences/com.airmusictech.Boom Content -string "/Applications/AIR Music Technology/Boom"
+/usr/bin/defaults write /Library/Preferences/com.airmusictech.Mini\ Grand Content -string "/Applications/AIR Music Technology/Mini Grand"
+/bin/chmod 644 /Library/Preferences/com.airmusictech.Boom.plist
+/bin/chmod 644 /Library/Preferences/com.airmusictech.Mini\ Grand.plist
+
+
 exit 0   
