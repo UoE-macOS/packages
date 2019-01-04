@@ -43,11 +43,21 @@ function set_prefs(){
     chown $USER /Users/$USER/Library/Preferences/com.unity3d.UnityEditor5.x.plist
 }
 
+
 if [ -f "${LICENSE_PATH}/${LICENSE_FILE}" ]
 then
-    echo "$0: Unity License file is already present. Exiting"
-    set_prefs
-    exit 0
+    echo "$0: Unity License file is already present."
+    # Current serial number lives in a base64-encoded string inside the license file
+    if [ `xmllint --xpath 'string(//License/DeveloperData/@Value)' "${LICENSE_PATH}/${LICENSE_FILE}" | base64 -D | cut -c 5-` == "${SERIAL}" ]
+    then
+        echo "$0: Serial in <DeveloperData> matches current serial - exiting"
+        set_prefs
+        exit 0
+    else
+        # Move old license file out of the way, as we need to update the serial
+        echo "$0: Serial in <DeveloperData> does not match current. Need to update."
+        mv "${LICENSE_PATH}/${LICENSE_FILE}" "${LICENSE_PATH}/${LICENSE_FILE}".$(date "+%Y-%m-%d%n")
+    fi
 fi
 
 echo "$0: No Unity license file found. Continuing"
@@ -72,15 +82,6 @@ sudo -u $USER ${command} || command_result=1
 
 # Clean up our temporary directory
 popd && rm -r "${tmpdir}"
-
-# In some cases the above operation seems to create root-owned folders under
-# the current user's /Library/Application Support/Unity folder. Make sure that, 
-# if these now exist, they are permissioned correctly.
-user_home="$(eval echo "~${USER}")"
-if [ -d "${user_home}/Library/Application Support/Unity" ]
-then
-    chown -R ${USER} "${user_home}/Library/Application Support/Unity"
-fi
 
 # Now, assess whether we have been successful
 if [ "${command_result}" == 0 ]
