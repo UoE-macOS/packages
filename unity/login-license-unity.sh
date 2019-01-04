@@ -60,8 +60,10 @@ then
     fi
 fi
 
-echo "$0: No Unity license file found. Continuing"
 echo "$0: Running Unity licensing command."
+
+# Make sure the current user can write to Unity's Application Support folder
+chmod 777 "${LICENSE_PATH}"
 
 # Create a temporary directory to work in: running this command seems 
 # to spew ome stuff into the current working directory when Unity starts up.
@@ -78,6 +80,7 @@ pushd "${tmpdir}"
 command="${UNITY_PATH} -quit -batchmode -serial ${SERIAL} -username ${USERNAME} -password ${PASSWORD}"
 
 command_result=0
+
 sudo -u $USER ${command} || command_result=1
 
 # Clean up our temporary directory
