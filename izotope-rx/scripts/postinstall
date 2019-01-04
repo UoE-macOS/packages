@@ -20,5 +20,5 @@ echo "Running: ${command}"
 
 sleep 5
 
-diskutil unmount "${vol}"
+diskutil eject "${vol}"
 exit $?
