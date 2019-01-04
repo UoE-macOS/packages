@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# Install Izotope RX, using its own commandline tool
+
+set -xeo pipefail
+
+DMG_FILE="IzotopeRX.dmg"
+TOOLPATH='Install RX 7 Audio Editor.app/Contents/MacOS/installbuilder.sh'
+ARGUMENTS='--mode unattended --debuglevel 4'
+
+# Mount our DMG
+echo "Mounting ${DMG_FILE}"
+vol="$(hdiutil attach "${DMG_FILE}"  | tail -1 | awk -F '\t' '{print $3}')"
+
+command="${vol}/${TOOLPATH}"
+
+echo "Running: ${command}"
+
+"${command}" ${ARGUMENTS}
+
+sleep 5
+
+diskutil unmount "${vol}"
+exit $?
