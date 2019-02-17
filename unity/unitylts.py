@@ -45,8 +45,9 @@ class MyHTMLParser(HTMLParser):
         if tag == 'a':
             for attr in attrs:
                 if (attr[0] == 'href' and
-                    attr[1].find('download_unity') >= 0 and
-                        not attr[1].find('torrent') > 0):
+                    	attr[1].find('download_unity') >= 0 and
+                    	not attr[1].find('torrent') > 0 and
+                    	not attr[1].find('DownloadAssistant') > 0):
                     _add_to_list(attr[1])
 
 
