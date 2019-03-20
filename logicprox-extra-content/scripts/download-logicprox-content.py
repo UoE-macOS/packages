@@ -343,7 +343,7 @@ def main(argv=None):
             except subprocess.CalledProcessError as exc:
                 print "INSTALL FAILED to install %s: %s" % (save_path, exc)
 
-        elif args['subparser_name'] == download:
+        elif args['subparser_name'] == 'download':
             for item in value["savepaths"]:
                 if os.path.exists(item):
                     os.unlink(item)
