@@ -67,11 +67,11 @@ except ImportError:
 #
 base_url = "https://audiocontentdownload.apple.com/lp10_ms3_content_2016/"
 base_url_2013 = "https://audiocontentdownload.apple.com/lp10_ms3_content_2013/"
-version = "1040"
+logicpro_version = "1040"
 garageband_version = "1021"
 
 garageband_plist_name = "garageband%s.plist" % garageband_version
-logicpro_plist_name = "logicpro%s.plist" % version
+logicpro_plist_name = "logicpro%s.plist" % logicpro_version
 
 
 download_urls_temp = {}
@@ -110,7 +110,6 @@ def download_plist(product):
     returns a dictionary
     """
     plist_name = '{}_plist_name'.format(product)
-    print plist_name
     plist_url = ''.join([base_url, globals()[plist_name]])
     try:
         f = urllib2.urlopen(plist_url)
