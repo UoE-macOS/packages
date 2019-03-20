@@ -4,19 +4,22 @@
 # ================================================================================
 # download-logicprox-content.py
 #
-# This script downloads the content packages for Logic Pro X. It also arranges
-# them in subdirectories the same way as displayed in the Logic Pro first run window.
+# This script downloads the content packages for Logic Pro X or GarageBand. 
+# It also arranges them in subdirectories the same way as displayed in the 
+# Logic Pro first run window, or optionally installs them direct from the CDN.
 #
 # Logic Pro X Version: 10.4.1
+# Garageband version: 10.2.1
 #
+# 
 # List package URLs:
-#       $ ./download-logicprox-content.py list
+#       $ ./download-logicprox-content.py -p [logicpro | garageband ] list
 #
 # Download packages:
-#       $ ./download-logicprox-content.py download -o ~/Downloads/LogicProContent
+#       $ ./download-logicprox-content.py -p [logicpro | garageband ] download -o ~/Downloads/Content
 #
 # Install packages:
-#       $ ./download-logicprox-content.py install -t /tmp/logicpro
+#       $ ./download-logicprox-content.py -p [logicpro | garageband ] install -t /tmp/packages_data
 #
 # Hannes Juutilainen <hjuutilainen@mac.com>
 # https://github.com/hjuutilainen/adminscripts
