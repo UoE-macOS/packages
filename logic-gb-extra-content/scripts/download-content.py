@@ -4,19 +4,22 @@
 # ================================================================================
 # download-logicprox-content.py
 #
-# This script downloads the content packages for Logic Pro X. It also arranges
-# them in subdirectories the same way as displayed in the Logic Pro first run window.
+# This script downloads the content packages for Logic Pro X or GarageBand. 
+# It also arranges them in subdirectories the same way as displayed in the 
+# Logic Pro first run window, or optionally installs them direct from the CDN.
 #
 # Logic Pro X Version: 10.4.1
+# Garageband version: 10.2.1
 #
+# 
 # List package URLs:
-#       $ ./download-logicprox-content.py list
+#       $ ./download-logicprox-content.py -p [logicpro | garageband ] list
 #
 # Download packages:
-#       $ ./download-logicprox-content.py download -o ~/Downloads/LogicProContent
+#       $ ./download-logicprox-content.py -p [logicpro | garageband ] download -o ~/Downloads/Content
 #
 # Install packages:
-#       $ ./download-logicprox-content.py install -t /tmp/logicpro
+#       $ ./download-logicprox-content.py -p [logicpro | garageband ] install -t /tmp/packages_data
 #
 # Hannes Juutilainen <hjuutilainen@mac.com>
 # https://github.com/hjuutilainen/adminscripts
@@ -64,8 +67,11 @@ except ImportError:
 #
 base_url = "https://audiocontentdownload.apple.com/lp10_ms3_content_2016/"
 base_url_2013 = "https://audiocontentdownload.apple.com/lp10_ms3_content_2013/"
-version = "1040"
-logicpro_plist_name = "logicpro%s.plist" % version
+logicpro_version = "1040"
+garageband_version = "1021"
+
+garageband_plist_name = "garageband%s.plist" % garageband_version
+logicpro_plist_name = "logicpro%s.plist" % logicpro_version
 
 
 download_urls_temp = {}
@@ -98,18 +104,19 @@ def download_package_as(url, output_file):
     return True
 
 
-def download_logicpro_plist():
+def download_plist(product):
     """
     Downloads the Logic Pro Content property list and
     returns a dictionary
     """
-    plist_url = ''.join([base_url, logicpro_plist_name])
+    plist_name = '{}_plist_name'.format(product)
+    plist_url = ''.join([base_url, globals()[plist_name]])
     try:
         f = urllib2.urlopen(plist_url)
         plist_data = f.read()
         f.close()
     except urllib2.HTTPError as e:
-        print "HTTP Error:", e.code, url
+        print "HTTP Error:", e.code, plist_url
 
     info_plist = plistlib.readPlistFromString(plist_data)
     return info_plist
@@ -228,6 +235,7 @@ def main(argv=None):
     
     # Create the top-level parser
     parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--product', nargs=1, required=True, help='Product: logic or garageband')
     subparsers = parser.add_subparsers(title='subcommands', dest='subparser_name')
     
     # List
@@ -247,14 +255,15 @@ def main(argv=None):
     # Parse arguments
     args = vars(parser.parse_args())
     print args 
+
     # =================================================================
     # Download the property list which contains the package references
     # =================================================================
-    logicpro_plist = download_logicpro_plist()
+    content_plist = download_plist(args['product'][0])
     
     # Raw requested, just print the property list and exit
     if args['subparser_name'] == 'raw':
-        print logicpro_plist
+        print content_plist
         return 0
     
     global download_directory
@@ -268,9 +277,14 @@ def main(argv=None):
     # Parse the property list for packages
     # =====================================
     global packages
-    packages = logicpro_plist['Packages']
-    content_dict = logicpro_plist['Content']
-    content = content_dict.get('en', [])
+    packages = content_plist['Packages']
+    # content_plist['Content'] is an array for GarageBand
+    # and a dict for Logic Pro
+    if args['product'][0] == 'logicpro':
+        content_dict = content_plist['Content']
+        content = content_dict.get('en', [])
+    elif args['product'][0] == 'garageband':
+        content = content_plist['Content']
     for content_item in content:
         if args['subparser_name'] == 'list':
             process_content_item(content_item, None, list_only=True)
@@ -307,9 +321,9 @@ def main(argv=None):
         download_size_string = human_readable_size(download_size_int)
         
 
-	if is_installed(save_path) and args['subparser_name'] == 'install':
-	    continue
-	
+        if is_installed(save_path) and args['subparser_name'] == 'install':
+            continue
+    
         if os.path.exists(save_path):
             # Check the local file size and download if it's smaller.
             # TODO: Get a better way for this. The 'DownloadSize' key in logicpro_plist
@@ -323,15 +337,15 @@ def main(argv=None):
             print "Downloading %s" % (download_url)
             download_package_as(download_url, save_path)
         
-	if args['subparser_name'] == 'install':
-	    print "Installing %s" % save_path 
+        if args['subparser_name'] == 'install':
+            print "Installing %s" % save_path 
             try:
                 install(save_path)
                 os.unlink(save_path)
             except subprocess.CalledProcessError as exc:
                 print "INSTALL FAILED to install %s: %s" % (save_path, exc)
 
-        elif args['subparser_name'] == download:
+        elif args['subparser_name'] == 'download':
             for item in value["savepaths"]:
                 if os.path.exists(item):
                     os.unlink(item)
