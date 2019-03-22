@@ -153,13 +153,11 @@ def find_mandatory_packages():
     """
     Find any mandatory packages that weren't listed the in Content list
     """
-    print type(packages)
     for key in packages.keys():
         if packages[key].get('IsMandatory', 0) is True:
             (download_url, download_name, download_size) = process_package_dict(packages[key])
-            relative_path = os.path.join(download_directory, key)
+            relative_path = os.path.join(download_directory, 'Mandatory_Packages')
             save_path = "".join([relative_path, '/', download_name])
-            print download_url
             process_package_download(download_url, save_path, download_size, download_name)
 
 def process_content_item(content_item, parent_items, list_only=False):
@@ -303,6 +301,10 @@ def main(argv=None):
         else:
             process_content_item(content_item, None, list_only=False)
     if args['product'][0] == 'garageband':
+        # GarageBand has some packages (2 at the time of writing) which 
+        # are not listed in any of the Content items but are nonetheless
+        # marked as 'IsMandatory' and seem to be required. Find any packages
+        # that are of this type and add them to the list.
         find_mandatory_packages()
 
     # ======================================
