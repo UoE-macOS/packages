@@ -321,8 +321,8 @@ def main(argv=None):
         download_size_string = human_readable_size(download_size_int)
         
 
-    if is_installed(save_path) and args['subparser_name'] == 'install':
-        continue
+        if is_installed(save_path) and args['subparser_name'] == 'install':
+            continue
     
         if os.path.exists(save_path):
             # Check the local file size and download if it's smaller.
@@ -337,8 +337,8 @@ def main(argv=None):
             print "Downloading %s" % (download_url)
             download_package_as(download_url, save_path)
         
-    if args['subparser_name'] == 'install':
-        print "Installing %s" % save_path 
+        if args['subparser_name'] == 'install':
+            print "Installing %s" % save_path 
             try:
                 install(save_path)
                 os.unlink(save_path)
