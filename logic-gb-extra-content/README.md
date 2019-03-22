@@ -4,11 +4,11 @@ Install Logic Pro X or GarageBand Extra Content
 A package to download and install all of the Logic X Pro Extra or GarageBand Content direct from Apple's servers. 
 
 # To Build
-`sh build.sh [logicpro | garageband] version`
+`sh build.sh [logicpro | garageband] version-release`
 
-For example, to build a package with the extra content for Garageband, and give it version 1032, type:
+For example, to build a package with the extra content for Garageband, and give it version 1032-1, type:
 
-`sh build.sh garageband 1032`
+`sh build.sh garageband 1032-1`
 
 # Thanks
 

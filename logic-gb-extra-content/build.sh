@@ -2,7 +2,6 @@
 set -e -o pipefail
 
 
-RELEASE=1
 BUILD='_build'
 
 if [[ $1 != 'logicpro' && $1 != 'garageband' ]] || [ -z $2 ]
@@ -20,5 +19,5 @@ mkdir ${BUILD}
 sed -e "s/XX_PRODUCT_XX/$PRODUCT/g" scripts/postinstall.tmpl > scripts/postinstall
 chmod +x scripts/postinstall
 
-pkgbuild --nopayload --version ${VERSION} --id com.github.uoe-macos.${PRODUCT}_extracontent --scripts scripts "${BUILD}/ExtraContent_${PRODUCT}_NetInstall-${VERSION}-${RELEASE}.pkg"
+pkgbuild --nopayload --version ${VERSION} --id com.github.uoe-macos.${PRODUCT}_extracontent --scripts scripts "${BUILD}/ExtraContent_${PRODUCT}_NetInstall-${VERSION}.pkg"
 
