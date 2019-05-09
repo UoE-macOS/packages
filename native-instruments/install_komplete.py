@@ -160,7 +160,7 @@ def main(args):
                         # This artifact has nothing for us to install
                         continue
                     for (candidate, version) in files:
-                        if is_installed(candidate, version) or args.DOWNLOAD_ONLY:
+                        if args.DOWNLOAD_ONLY or is_installed(candidate, version) :
                             # Already installed, or user has requested no installation
                             continue
                         path = None # Set this to something so we can reference it in the finally block
