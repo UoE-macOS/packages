@@ -168,7 +168,7 @@ def main(args):
                             path, pkg = attach_image(candidate)
                             if args.PACKAGES:
                                 copy_pkg(os.path.join(path, pkg), 
-                                         os.path.join(args.DOWNLOAD_DIR, '_packages'))
+                                         os.path.join(args.DOWNLOAD_DIR, dist_type, '_packages'))
                             else:
                                 install_pkg(path + '/' + pkg, candidate, version)
                         except subprocess.CalledProcessError as err:
