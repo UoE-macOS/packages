@@ -40,6 +40,12 @@ def process_args(argv=None):
                         help=('Do not look for new fullproduct installers, only updates. This '
                               'can hopefully be used to update an existing installation. YMMV'))
 
+    parser.add_argument('--packages', default=False, action='store_true',
+                        dest='PACKAGES', 
+                        help=('Copy packages into a subfolder in the downloads folder.'
+                              'implies --download-only'))
+
+
     args = parser.parse_args(argv)
 
     if args.DOWNLOAD_ONLY:
@@ -148,26 +154,31 @@ def main(args):
                 latest = get_latest_artifacts(artifacts)
 
                 for art in latest:
-                    files = process_artifact(art, dist_type=dist_type, force_download=args.DOWNLOAD_ONLY)
+                    files = process_artifact(art, dist_type=dist_type, 
+                                             force_download=(args.DOWNLOAD_ONLY or args.PACKAGES))
                     if not files: 
                         # This artifact has nothing for us to install
                         continue
                     for (candidate, version) in files:
-                        if is_installed(candidate, version) or args.DOWNLOAD_ONLY:
-                            # Alreday installed, or user has requested no installation
+                        if is_installed(candidate, version) or args.DOWNLOAD_ONLY or args.PACKAGES:
+                            # Already installed, or user has requested no installation
                             continue
                         path = None # Set this to something so we can reference it in the finally block
                         try:
                             path, pkg = attach_image(candidate)
-                            install_pkg(path + '/' + pkg, candidate, version)
-                            if not args.PRESERVE:
-                                os.unlink(candidate)
+                            if args.PACKAGES:
+                                copy_pkg(os.path.join(path, pkg), 
+                                         os.path.join(args.DOWNLOAD_DIR, '_packages'))
+                            else:
+                                install_pkg(path + '/' + pkg, candidate, version)
                         except subprocess.CalledProcessError as err:
                             print("INSTALL FAILED: {} ({})".format(pkg, err))
                             continue
                         finally:
                             if path:
                                 unmount(path)
+                            if not args.PRESERVE:
+                                os.unlink(candidate)
             except urllib2.HTTPError as err:
                 sys.stderr.write("{}\n".format(err))
                 continue
@@ -241,6 +252,14 @@ def install_pkg(package, from_file, version):
     subprocess.check_call(cmd)
     with open(receipts, 'a+') as rcpt:
         rcpt.write('{}\n'.format(ident))
+
+def copy_pkg(package, dest):
+    # Will raise a subprocess.CalledProcessError in case of failure
+    print("Copying: ", package)
+    if not os.path.isdir(dest):
+        os.mkdir(dest)
+    cmd = ['cp', package, dest]
+    subprocess.check_call(cmd)
 
 
 def process_artifact(artifact, dist_type, force_download=False):
