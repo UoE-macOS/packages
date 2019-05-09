@@ -148,7 +148,7 @@ def main(args):
                 latest = get_latest_artifacts(artifacts)
 
                 for art in latest:
-                    files = process_artifact(art, download=dist_type)
+                    files = process_artifact(art, dist_type=dist_type, force_download=args.DOWNLOAD_ONLY)
                     if not files: 
                         # This artifact has nothing for us to install
                         continue
@@ -186,7 +186,7 @@ def get_bearer_token(path):
 
 
 def install_native_access(downloads):
-    print('Downloading Natve Access...')
+    print('Downloading Native Access...')
     fetch(NATIVE_ACCESS_URL, dest=downloads + '/native-access.dmg')
     path, pkgs = attach_image(downloads + '/native-access.dmg')
     dest = '/Applications/Native Access.app'
@@ -243,7 +243,7 @@ def install_pkg(package, from_file, version):
         rcpt.write('{}\n'.format(ident))
 
 
-def process_artifact(artifact, download=False):
+def process_artifact(artifact, dist_type, force_download=False):
     # No Windows, thanks.
     if not artifact['platform'] in ['mac_platform', 'all_platform']:
         return None
@@ -261,8 +261,8 @@ def process_artifact(artifact, download=False):
         print('{}, {}M, {}'.format(
             afile['target_file'], afile['filesize']/1024/1024, url))
         
-        if download and not is_installed(afile['target_file'], artifact['version']):
-            outfile = '_downloads/' + download + '/' + afile['target_file']
+        if force_download is True or (not is_installed(afile['target_file'], artifact['version'])):
+            outfile = '_downloads/' + dist_type + '/' + afile['target_file']
             if os.path.isfile(outfile) and not afile['filesize'] > os.path.getsize(outfile):
                 files_to_return.append((outfile, artifact['version']))
                 continue
