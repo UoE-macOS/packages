@@ -138,11 +138,16 @@ def main(args):
     check_create_download_dirs(args.DOWNLOAD_DIR, dist_types)
 
     # Install the latest version of Native Access
-    install_native_access(args.DOWNLOAD_DIR)
+    if args.DOWNLOAD_ONLY or args.PACKAGES:
+        na_location = os.path.join(args.DOWNLOAD_DIR, 'Native Access')
+    else:   
+        na_location = ('/Applications')
+
+    install_native_access(args.DOWNLOAD_DIR, na_location)
 
     # This authentication token is embedded in the application. 
     # Make sure we have an up-to-date copy.   
-    token = get_bearer_token('/Applications/Native Access.app/Contents/MacOS/Native Access')
+    token = get_bearer_token(os.path.join(na_location, 'Native Access.app/Contents/MacOS/Native Access'))
 
     # Stash our auth token.
     AUTH_HEADER['Authorization'] = 'Bearer ' + token
@@ -202,15 +207,18 @@ def get_bearer_token(path):
     return token[0]
 
 
-def install_native_access(downloads):
+def install_native_access(downloads, install_dest):
     print('Downloading Native Access...')
     fetch(NATIVE_ACCESS_URL, dest=downloads + '/native-access.dmg')
     path, pkgs = attach_image(downloads + '/native-access.dmg')
-    dest = '/Applications/Native Access.app'
+
+    dest = os.path.join(install_dest, 'Native Access.app')
+    
     if os.path.isdir(dest):
         shutil.rmtree(dest)
+    
     print('Installing Native Access...')
-    shutil.copytree(path + '/' + 'Native Access.app', '/Applications/Native Access.app')
+    shutil.copytree(os.path.join(path, 'Native Access.app'), dest)
     unmount(path)
 
 
