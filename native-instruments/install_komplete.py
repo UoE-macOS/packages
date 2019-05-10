@@ -166,7 +166,9 @@ def main(args):
                             continue
                         if args.PACKAGES and candidate.endswith('.iso'):
                             # Wrap the ISO in a .pkg installer
-                            wrap_iso(candidate, version)
+                            wrap_iso(candidate, version, 
+                                     dest=os.path.join(args.DOWNLOAD_DIR, dist_type, '_packages'))
+                            continue
                         path = None # Set this to something so we can reference it in the finally block
                         try:
                             path, pkg = attach_image(candidate)
@@ -268,24 +270,27 @@ def copy_pkg(package, dest):
 def wrap_iso(iso, version, dest):
     # First, construct an appropriate package root
     preinstall_script = r"""#!/bin/sh
-$iso={}
+iso="{}"
 set -euo pipefail
 echo "Mounting $iso..."
 vol="$(hdiutil attach $iso  | tail -1 | awk -F '\t' '{{print $3}}')"
 
-pkg="$(ls $vol | grep '\.pkg$')"
+pkg="$(ls "${{vol}}" | grep '\.pkg$')"
 
-if [ ! -z ${{pkg}} ]
+if [ ! -z "${{pkg}}" ]
 then
     echo "Installing ${{pkg}}..."
-    installer -pkg "${{pkg}}" -target / -dumplog  
+    installer -pkg "${{vol}}/${{pkg}}" -target / -dumplog  
     sleep 5
 else
-    echo "Can'f find a package at ${{vol}}"
+    echo "Can't find a package at ${{vol}}"
+    exit 1 # Leave mounted so admin can diagnose the issue
 fi
 diskutil unmount "${{vol}}"
 """.format(os.path.basename(iso))
 
+    if not os.path.isdir(dest):
+        os.makedirs(dest)
     pkg_name = os.path.basename(iso)[:-4]
     pkgdir = tempfile.mkdtemp(suffix="NativeInstruments", dir=dest)
     pkg_scripts = os.path.join(pkgdir, 'Scripts')
@@ -304,9 +309,14 @@ diskutil unmount "${{vol}}"
                            '--scripts', pkg_scripts,
                            '--version', version,
                            '--id', 'com.nativeinstruments.' + pkg_name,
-                           os.path.join(dest, pkg_name) + '.pkg'])
+                           os.path.join(dest, canonicalise_pkg_name(pkg_name, version)) + '.pkg'])
 
     shutil.rmtree(pkgdir)
+
+
+def canonicalise_pkg_name(name, version):
+    name.replace(' ', '_')
+    return name + '-' + version
 
 
 def process_artifact(artifact, dist_type, force_download=False):
