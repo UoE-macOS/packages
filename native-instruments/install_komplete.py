@@ -173,7 +173,7 @@ def main(args):
                         try:
                             path, pkg = attach_image(candidate)
                             if args.PACKAGES:
-                                copy_pkg(os.path.join(path, pkg), 
+                                copy_pkg(os.path.join(path, pkg), version,
                                          os.path.join(args.DOWNLOAD_DIR, dist_type, '_packages'))
                             else:
                                 install_pkg(path + '/' + pkg, candidate, version)
@@ -259,12 +259,13 @@ def install_pkg(package, from_file, version):
     with open(receipts, 'a+') as rcpt:
         rcpt.write('{}\n'.format(ident))
 
-def copy_pkg(package, dest):
+def copy_pkg(package, version, dest):
     # Will raise a subprocess.CalledProcessError in case of failure
     print("Copying: ", package)
     if not os.path.isdir(dest):
         os.mkdir(dest)
-    cmd = ['cp', package, dest]
+    cmd = ['cp', package, 
+           os.path.join(dest, canonicalise_pkg_name(package, version))]
     subprocess.check_call(cmd)
 
 def wrap_iso(iso, version, dest):
@@ -289,9 +290,16 @@ fi
 diskutil unmount "${{vol}}"
 """.format(os.path.basename(iso))
 
+    pkg_name = os.path.basename(iso)[:-4]
+    out_file = os.path.join(dest, canonicalise_pkg_name(pkg_name, version))
+
     if not os.path.isdir(dest):
         os.makedirs(dest)
-    pkg_name = os.path.basename(iso)[:-4]
+
+    if os.path.isfile(out_file):
+        print("{} exists".format(out_file))
+        return True
+
     pkgdir = tempfile.mkdtemp(suffix="NativeInstruments", dir=dest)
     pkg_scripts = os.path.join(pkgdir, 'Scripts')
     os.mkdir(pkg_scripts)
@@ -309,14 +317,20 @@ diskutil unmount "${{vol}}"
                            '--scripts', pkg_scripts,
                            '--version', version,
                            '--id', 'com.nativeinstruments.' + pkg_name,
-                           os.path.join(dest, canonicalise_pkg_name(pkg_name, version)) + '.pkg'])
+                           out_file])
 
     shutil.rmtree(pkgdir)
 
 
 def canonicalise_pkg_name(name, version):
-    name.replace(' ', '_')
-    return name + '-' + version
+    # Remove .pkg - we will add it back after manipulation
+    if name.endswith('.pkg'):
+        name = name[:-4]
+    # Get rid of spaces
+    name = name.replace(' ', '_')
+    # Remove any path components before the name
+    name = os.path.basename(name)
+    return name + '-' + version + '.pkg'
 
 
 def process_artifact(artifact, dist_type, force_download=False):
