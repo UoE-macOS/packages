@@ -7,6 +7,7 @@ import json
 import shutil
 import subprocess
 import argparse
+import tempfile
 from distutils.version import LooseVersion
 import xml.etree.ElementTree as ET
 
@@ -160,9 +161,12 @@ def main(args):
                         # This artifact has nothing for us to install
                         continue
                     for (candidate, version) in files:
-                        if args.DOWNLOAD_ONLY or is_installed(candidate, version) :
+                        if args.DOWNLOAD_ONLY or is_installed(candidate, version):
                             # Already installed, or user has requested no installation
                             continue
+                        if args.PACKAGES and candidate.endswith('.iso'):
+                            # Wrap the ISO in a .pkg installer
+                            wrap_iso(candidate, version)
                         path = None # Set this to something so we can reference it in the finally block
                         try:
                             path, pkg = attach_image(candidate)
@@ -260,6 +264,49 @@ def copy_pkg(package, dest):
         os.mkdir(dest)
     cmd = ['cp', package, dest]
     subprocess.check_call(cmd)
+
+def wrap_iso(iso, version, dest):
+    # First, construct an appropriate package root
+    preinstall_script = r"""#!/bin/sh
+$iso={}
+set -euo pipefail
+echo "Mounting $iso..."
+vol="$(hdiutil attach $iso  | tail -1 | awk -F '\t' '{{print $3}}')"
+
+pkg="$(ls $vol | grep '\.pkg$')"
+
+if [ ! -z ${{pkg}} ]
+then
+    echo "Installing ${{pkg}}..."
+    installer -pkg "${{pkg}}" -target / -dumplog  
+    sleep 5
+else
+    echo "Can'f find a package at ${{vol}}"
+fi
+diskutil unmount "${{vol}}"
+""".format(os.path.basename(iso))
+
+    pkg_name = os.path.basename(iso)[:-4]
+    pkgdir = tempfile.mkdtemp(suffix="NativeInstruments", dir=dest)
+    pkg_scripts = os.path.join(pkgdir, 'Scripts')
+    os.mkdir(pkg_scripts)
+
+    with open(os.path.join(pkg_scripts, 'preinstall'), 'w') as f:
+        f.write(preinstall_script)
+
+    subprocess.check_call(['chmod', '0755', 
+                           os.path.join(pkg_scripts, 'preinstall')])
+    
+    # Hard link instead of copying or moving
+    os.link(iso, os.path.join(pkg_scripts, os.path.basename(iso)))
+
+    subprocess.check_call(['pkgbuild', '--nopayload', 
+                           '--scripts', pkg_scripts,
+                           '--version', version,
+                           '--id', 'com.nativeinstruments.' + pkg_name,
+                           os.path.join(dest, pkg_name) + '.pkg'])
+
+    shutil.rmtree(pkgdir)
 
 
 def process_artifact(artifact, dist_type, force_download=False):
