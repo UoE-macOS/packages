@@ -4,14 +4,13 @@ set -e -o pipefail
 
 BUILD='_build'
 
-if [[ $1 != 'logicpro' && $1 != 'garageband' ]] || [ -z $2 ]
+if [ -z $1 ]
 then
-    echo "Usage: $0 [logicpro | garageband] version"
+    echo "Usage: $0 version"
     exit 255
 fi
 
-PRODUCT=${1}
-VERSION=${2}
+VERSION=${1}
 
 [ -d "${BUILD}" ] && rm -r ${BUILD}
 mkdir ${BUILD}
@@ -19,5 +18,10 @@ mkdir ${BUILD}
 sed -e "s/XX_PRODUCT_XX/$PRODUCT/g" scripts/postinstall.tmpl > scripts/postinstall
 chmod +x scripts/postinstall
 
-pkgbuild --nopayload --version ${VERSION} --id com.github.uoe-macos.${PRODUCT}_extracontent --scripts scripts "${BUILD}/ExtraContent_${PRODUCT}_NetInstall-${VERSION}.pkg"
+
+# fetch the latest version of Carl's great script
+curl 'https://raw.githubusercontent.com/carlashley/appleloops/master/appleLoops.py' > scripts/appleloops.py
+
+
+pkgbuild --nopayload --version ${VERSION} --id com.github.uoe-macos.appleloops.deploy --scripts scripts "${BUILD}/AppleLoops_NetInstall-${VERSION}.pkg"
 

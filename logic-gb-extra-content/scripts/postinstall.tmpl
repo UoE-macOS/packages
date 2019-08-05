@@ -1,11 +1,10 @@
 #!/bin/bash
 
-tmpdir='/tmp/LogicGBExtraContent'
-python download-content.py -p XX_PRODUCT_XX install -o ${tmpdir}
+python appleloops.py --deploy --optional --mandatory 
     
 if [ $? -eq 0 ]
 then
-    echo "Installed extra content for XX_PRODUCT_XX"
+    echo "Installed Apple Loops"
     rm -r ${tmpdir}
     exit 0
 else
