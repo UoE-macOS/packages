@@ -1,0 +1,20 @@
+{
+    "This Computer Only": {
+        "Common": {
+            "AcceptedEULA": true,
+            "SuppressVersionWarning": true
+        },
+        "Preferences": {
+            "DefaultTemplate19": "/Applications/SketchUp 2019/SketchUp.app/Contents/Resources/Content/Resources/en-US/Templates/Temp01b - Simple.skp",
+            "LastUpdateCheck": 0.0
+        },
+        "RecentTemplates": {
+            "count": 1,
+            "value0": "/Applications/SketchUp 2019/SketchUp.app/Contents/Resources/Content/Resources/en-US/Templates/Temp01b - Simple.skp"
+        },
+        "Toolbars": {
+            "Trimble Connect.Visible": 0
+        }
+    }
+}
+
