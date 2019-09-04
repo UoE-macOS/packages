@@ -99,7 +99,7 @@ launchagent_text="$(cat <<EOT
 	<key>KeepAlive</key>
 	<false/>
 	<key>Enabled</key>
-	<false/>
+	<true/>
 	<key>RunAtLoad</key>
 	<true/>
 </dict>
@@ -107,9 +107,10 @@ launchagent_text="$(cat <<EOT
 EOT)"
 
 # Create the launchagent
-echo "${launchagent_text}" | tee "${LAUNCHAGENT_PATH}"
+echo "${launchagent_text}" > "${LAUNCHAGENT_PATH}"
 
 # And Launch it, in the current user's session
+launchctl bootstrap gui/$(id -u ${USER}) "${LAUNCHAGENT_PATH}"
 launchctl kickstart gui/$(id -u ${USER})/uk.ac.ed.eca.unity_license
 sleep 10
 
