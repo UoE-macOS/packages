@@ -112,7 +112,7 @@ echo "${launchagent_text}" > "${LAUNCHAGENT_PATH}"
 # And Launch it, in the current user's session
 launchctl bootstrap gui/$(id -u ${USER}) "${LAUNCHAGENT_PATH}"
 launchctl kickstart gui/$(id -u ${USER})/uk.ac.ed.eca.unity_license
-sleep 10
+sleep 30
 
 command_result=$?
 
