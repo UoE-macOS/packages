@@ -1,0 +1,83 @@
+{
+    "Shared for All Computers": {
+        "Application": {
+            "LastSECopyVersion": "19.2.221"
+        },
+        "PageOptions": {
+            "ShowTransition": true,
+            "TransitionTime": 1.5
+        },
+        "Preferences": {
+            "AllowPreselectPushPull": true,
+            "AlwaysFixValidityErrors": false,
+            "AutoDrawingPlane": true,
+            "AutoSave": true,
+            "AutoSaveFreq": 5,
+            "CheckForUpdates": false,
+            "ClickStyle": 2,
+            "ColorParallelPerpendicular_RGB": "255 0 255",
+            "ColorTangent_RGB": "0 255 255",
+            "ColorX_RGB": "255 0 0",
+            "ColorY_RGB": "0 255 0",
+            "ColorZ_RGB": "0 0 255",
+            "ContinueLineMode": true,
+            "DisplayCrosshairs": false,
+            "DisplayTabs": true,
+            "EnableCheckValidity": true,
+            "IntersectEdges": true,
+            "MaxUndo": 100,
+            "SaveBackup": true,
+            "ShowInferenceTips": true,
+            "UpdateDefaultColorOn": true,
+            "UpdateDefaultOn": true,
+            "VCBShowTypedInputBackground": true,
+            "VCBTimoutSeconds": 5
+        },
+        "SlideshowOptions": {
+            "LoopSlideshow": true,
+            "SlideTime": 1.0
+        }
+    },
+    "Windows Only": {},
+    "Mac Only": {
+        "Settings": {
+            "Num_Shortcuts": 19,
+            "Shortcut_1": "0 0 0   selectSelectionTool:",
+            "Shortcut_10": "0 0 0 M selectMoveTool:",
+            "Shortcut_11": "0 0 0 Q selectRotateTool:",
+            "Shortcut_12": "0 0 0 S selectScaleTool:",
+            "Shortcut_13": "0 0 0 F selectOffsetTool:",
+            "Shortcut_14": "0 0 0 O selectOrbitTool:",
+            "Shortcut_15": "0 0 0 H selectDollyTool:",
+            "Shortcut_16": "0 0 0 Z selectZoomTool:",
+            "Shortcut_17": "0 0 1 Z viewZoomExtents:",
+            "Shortcut_18": "0 0 0 E selectEraseTool:",
+            "Shortcut_19": "0 0 0 K toggleDisplayBackEdges:",
+            "Shortcut_2": "0 0 0 G makeComponent:",
+            "Shortcut_3": "0 0 0 L selectLineTool:",
+            "Shortcut_4": "0 0 0 T selectMeasureTool:",
+            "Shortcut_5": "0 0 0 B selectPaintTool:",
+            "Shortcut_6": "0 0 0 R selectRectangleTool:",
+            "Shortcut_7": "0 0 0 C selectCircleTool:",
+            "Shortcut_8": "0 0 0 A selectArcTool:",
+            "Shortcut_9": "0 0 0 P selectPushPullTool:"
+        },
+        "ToolbarArcs": {
+            "lastSelectedItem": 0
+        },
+        "ToolbarLines": {
+            "lastSelectedItem": 0
+        },
+        "Toolbars": {
+            "Advanced Camera Tools.Visible": 0,
+            "Dynamic Components.Visible": 0,
+            "Sandbox.Visible": 0
+        },
+        "ToolbarShapes": {
+            "lastSelectedItem": 0
+        }
+    },
+    "Web Only": {},
+    "iOS Only": {},
+    "Android Only": {}
+}

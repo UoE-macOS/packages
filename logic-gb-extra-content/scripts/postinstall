@@ -1,0 +1,13 @@
+#!/bin/bash
+
+python appleloops.py --deploy --optional --mandatory 
+    
+if [ $? -eq 0 ]
+then
+    echo "Installed Apple Loops"
+    rm -r ${tmpdir}
+    exit 0
+else
+    echo "Install failed"
+    exit 1
+fi
