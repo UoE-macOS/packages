@@ -25,6 +25,7 @@ PASSWORD="${6}"
 UNITY_PATH='/Applications/Unity/Unity.app/Contents/MacOS/Unity'
 LICENSE_PATH='/Library/Application Support/Unity/'
 LICENSE_FILE='Unity_lic.ulf'
+LAUNCHAGENT_PATH='/Library/LaunchAgents/uk.ac.ed.eca.unity_license.plist'
 
 function set_prefs(){
 	# Try to get around unity's default behaviour 
@@ -73,18 +74,50 @@ tmpdir="$(mktemp -d /tmp/unitylicense.XXXX)"
 # they can write to our working directory
 chmod 777 "${tmpdir}"
 
-# CD
-pushd "${tmpdir}"
+# Define a launchAgent that will do our dirty work for us
+launchagent_text="$(cat <<EOT
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>uk.ac.ed.eca.unity_license</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>${UNITY_PATH}</string>
+		<string>-quit</string>
+		<string>-batchmode</string>
+		<string>-serial</string>
+		<string>${SERIAL}</string>
+		<string>-username</string>
+		<string>${USERNAME}</string>
+		<string>-password</string>
+		<string>$(python -c "from xml.sax.saxutils import escape; print escape('${PASSWORD}')")</string>
+	</array>
+    <key>WorkingDirectory</key>
+    <string>${tmpdir}</string>
+	<key>KeepAlive</key>
+	<false/>
+	<key>Enabled</key>
+	<false/>
+	<key>RunAtLoad</key>
+	<true/>
+</dict>
+</plist>
+EOT)"
 
-# Run the licensing command
-command="${UNITY_PATH} -quit -batchmode -serial ${SERIAL} -username ${USERNAME} -password ${PASSWORD}"
+# Create the launchagent
+echo "${launchagent_text}" | tee "${LAUNCHAGENT_PATH}"
 
-command_result=0
+# And Launch it, in the current user's session
+launchctl kickstart gui/$(id -u ${USER})/uk.ac.ed.eca.unity_license
+sleep 10
 
-sudo -u $USER ${command} || command_result=1
+command_result=$?
 
-# Clean up our temporary directory
-popd && rm -r "${tmpdir}"
+# Clean up our temporary directory and LaunchAgent 
+rm -r "${tmpdir}"
+rm "${LAUNCHAGENT_PATH}"
 
 # Now, assess whether we have been successful
 if [ "${command_result}" == 0 ]
